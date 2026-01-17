@@ -1,0 +1,233 @@
+<!doctype html><meta charset="UTF-8">
+<svg id="Content"></svg>
+<script type="module">
+
+
+import {SVG,Rect}		from './js/SVG.js'
+import {Sprite}			from './js/Sprite.js'
+import * as Kit			from './Kit.js'
+import {InputMapper}	from './Gamepad.js'
+import {Recast}			from './Recast.js'
+
+
+class Content extends SVG{
+	constructor(){
+		super('#Content')
+		let GCD = new Recast(2.5)
+		let xhb = new CrossHotbar(
+
+			new Action('#CrossHotbar-A01',new Recast(10)),
+			new Action('#CrossHotbar-A02',new Recast(20)),
+			new Action('#CrossHotbar-A03',new Recast(30)),
+			new Action('#CrossHotbar-A04',new Recast(40)),
+			new Action('#CrossHotbar-A05',new Recast(3)),
+			new Action('#CrossHotbar-A06',new Recast(4)),
+			new Action('#CrossHotbar-A07',new Recast(5)),
+			new Action('#CrossHotbar-A08',new Recast(6)),
+			
+			new Action('#CrossHotbar-B01',new Recast(2)),
+			new Action('#CrossHotbar-B02',GCD),
+			new Action('#CrossHotbar-B03',GCD),
+			new Action('#CrossHotbar-B04',GCD),
+			new Action('#CrossHotbar-B05',new Recast(1)),
+			new Action('#CrossHotbar-B06',GCD),
+			new Action('#CrossHotbar-B07',GCD),
+			new Action('#CrossHotbar-B08',GCD),
+
+			new Action('#CrossHotbar-C01',new Recast(10)),
+			new Action('#CrossHotbar-C02',new Recast(20)),
+			new Action('#CrossHotbar-C03',new Recast(30)),
+			new Action('#CrossHotbar-C04',new Recast(40)),
+			new Action('#CrossHotbar-C05',new Recast(3)),
+			new Action('#CrossHotbar-C06',new Recast(4)),
+			new Action('#CrossHotbar-C07',new Recast(5)),
+			new Action('#CrossHotbar-C08',new Recast(6)),
+			
+			new Action('#CrossHotbar-D01',new Recast(2)),
+			new Action('#CrossHotbar-D02',GCD),
+			new Action('#CrossHotbar-D03',GCD),
+			new Action('#CrossHotbar-D04',GCD),
+			new Action('#CrossHotbar-D05',new Recast(1)),
+			new Action('#CrossHotbar-D06',GCD),
+			new Action('#CrossHotbar-D07',GCD),
+			new Action('#CrossHotbar-D08',GCD),
+
+		)
+		
+		let logger = new Kit.Logger()
+		xhb.add(action=>logger.add(action.name))
+		this.add(new Kit.Vertical(logger,xhb).scale(1.5))
+	}
+}
+
+
+class CrossHotbar extends SVG{
+	constructor(...actions){
+		super('g.CrossHotbar',new CrossHotbar.Asset())
+		this.listeners = []
+		this.actions = actions
+		let triggers = [
+			new Hotbar('Left',		actions.slice(0,8)).position(-142,0),
+			new Hotbar('Right',		actions.slice(8,16)).position(142,0),
+			new Hotbar('LeftRight',	actions.slice(16,24)).visible(false),
+			new Hotbar('RightLeft',	actions.slice(24,32)).visible(false),
+		]
+		new Crossover(s=>this.dispatch(s)).bind(triggers)
+		this.add({click:e=>this.dispatch(e.target.dataset.binding)})
+		this.add(this.recasts,triggers)
+	}
+	dispatch(type){
+		let action = this.actions.find(v=>v.binding==type)
+		if(action==null) return this
+		action.press()
+		if(action.recast.available){
+			action.recast.start()
+			this.listeners.forEach(f=>f(action))
+		}
+		return this
+	}
+	get recasts(){return new SVG('defs',...new Set(this.actions.map(v=>v.recast)))}
+	addFunction(f){this.listeners.push(f);return this}
+}
+
+CrossHotbar.Asset = class extends SVG{
+	constructor(){
+		super('defs.CrossHotbarAsset').add(
+			new Sprite('CrossHotbar.svg'),
+			new Recast.Asset().getElements('[id]'),
+			new SVG('mask',{id:'CrossHotbar-ButtonMask'},
+				new SVG('rect',{fill:'white',rx:5}).rect(-20,-20,40,40)
+			),
+		)
+	}
+}
+
+class Crossover extends InputMapper{
+	constructor(listener){
+		super(e=>listener(`${e.shift}_${e.type}`))
+	}
+	bind(triggers){
+		let front	= {scale:46/40,	visible:true}
+		let middle	= {scale:1,		visible:true}
+		let back	= {scale:34/40,	visible:true}
+		let hidden	= {scale:1,		visible:false}
+		let state 	= {
+			None	  :[middle,	middle,	hidden,	hidden	],
+			Left	  :[front,	back,	hidden,	hidden	],
+			Right	  :[back,	front,	hidden,	hidden	],
+			LeftRight :[hidden,	hidden,	front,	hidden	],
+			RightLeft :[hidden,	hidden,	hidden,	front	],
+		}
+		return this.add(e=>{
+			if(e.type=='Shift' && e.shift in state){
+				state[e.shift].forEach((v,i)=>triggers[i].update(v))
+			} 
+		})
+	}
+}
+
+class Hotbar extends SVG{
+	constructor(type,actions){
+		super('g.Hotbar').xform()
+		let x=42,y=24,span=69
+		this.actions = [
+			actions[0].bind(type+'_DpadUp')		.position(-span,-y),
+			actions[1].bind(type+'_DpadRight')	.position(-span+x,0),
+			actions[2].bind(type+'_DpadDown')	.position(-span,y),
+			actions[3].bind(type+'_DpadLeft')	.position(-span-x,0),
+			actions[4].bind(type+'_ButtonNorth').position(span,-y),
+			actions[5].bind(type+'_ButtonEast')	.position(span+x,0),
+			actions[6].bind(type+'_ButtonSouth').position(span,y),
+			actions[7].bind(type+'_ButtonWest')	.position(span-x,0),
+		]
+		this.add(this.actions)
+	}
+	update(state){
+		this.transform.scale = state.scale
+		return this.visible(state.visible)
+	}
+}
+
+
+class Action extends SVG{
+	constructor(href,recast){
+		super('g.Action')
+		let rect	= new Rect(-20,-20,40,40)
+		this.name	= href.slice(1)
+		this.recast	= recast
+		this.focus	= new Action.Focus()
+		this.button = new SVG('rect',rect,{fill:'transparent'})
+		
+		let icon = new SVG('g',{mask:'url(#CrossHotbar-ButtonMask)'},
+			new SVG('use',{href},rect),
+			new SVG('use',{href:'#'+recast.id}),
+			new SVG('use',{href:'#CrossHotbar-button'},rect),
+		)
+		this.add(
+			new SVG('rect',rect,{rx:5,stroke:'black',stroke_width:2}),
+			icon,this.focus,
+			recast.timer.duration>2.5 && new Action.Label(recast.timer),
+			this.button
+		)
+	}
+	press(){this.focus.begin();return this}
+	bind(binding){
+		this.binding = binding
+		this.button.data({binding})
+		return this
+	}
+}
+
+Action.Focus = class extends SVG{
+	constructor(){
+		super('g.Focus')
+		let focus	= {fill:'#fff4',opacity:0,rx:5,stroke:'white',stroke_width:2}
+		let effect	= {fill:'white',opacity:0,r:4,mask:'url(#CrossHotbar-ButtonMask)'}
+		
+		this.animates = [
+			new SVG.Animate('opacity',	0.4,{values:'1;1;0',keyTimes:'0;0.8;1'}),
+			new SVG.Animate('opacity',	0.4,{from:1,to:0}),
+			new SVG.Animate('r',		0.4,{from:4,to:24}),
+		]
+		this.add(
+			new SVG('rect',focus,this.animates[0]).rect(-20,-20,40,40),
+			new SVG('circle',effect,this.animates[1],this.animates[2]),
+		)
+	}
+	begin(){this.animates.forEach(n=>n.begin());return this}
+}
+
+Action.Label = class extends SVG{
+	constructor(timer){
+		super('g.Label',{font_size:12}).position(-19,19)
+		timer.add({
+			update	:t=>this.text = Math.ceil(t.remaining),
+			complete:t=>this.text = '',
+		})
+		this.add(
+			new SVG('text',{stroke:'black',stroke_width:2}),
+			new SVG('text',{fill:'white'}),
+		)
+		this.elements = this.getElements('text')
+	}
+	set text(s){this.elements.forEach(v=>v.textContent = s)}
+}
+
+
+new Content()
+
+
+</script>
+<style>
+
+body{margin:0;background:#004A70;}
+html,body{height:100%;}
+#Content{width:100%;height:100%;display:block;}
+svg text{
+	font-family:"Noto Sans JP",sans-serif;
+	dominant-baseline:central;
+	stroke-linejoin:round;stroke-linecap:round;
+	user-select:none;
+}
+
+</style>
