@@ -89,7 +89,7 @@ class CrossHotbar extends SVG{
 		return this
 	}
 	get recasts(){return new SVG('defs',...new Set(this.actions.map(v=>v.recast)))}
-	addFunction(f){this.listeners.push(f);return this}
+	varFunction(f){this.listeners.push(f);return this}
 }
 
 CrossHotbar.Asset = class extends SVG{

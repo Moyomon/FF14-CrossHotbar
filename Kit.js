@@ -8,9 +8,7 @@ export class Logger extends SVG{
 		super('Logger')
 		this.history = []
 	}
-	addString(s){//10
-		//console.log(s)
-
+	varString(s){
 		if(this.history.length===12) this.history.length = 0
 		let action = new Icon('#'+s).position(45*(this.history.length-11/2),0)
 		this.history.push(action)
