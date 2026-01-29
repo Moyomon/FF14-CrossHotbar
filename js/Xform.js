@@ -18,8 +18,8 @@ export class Xform extends Array{
 	}
 	toString(){
 		let t = `translate(${this[0]},${this[1]})`
-		let r = this[5]==0?'':` rotate(${this[5]}deg)`
-		let s = this[6]==1?'':` scale(${this[6]})`
+		let r = this[5]===0?'':` rotate(${this[5]}deg)`
+		let s = this[6]===1?'':` scale(${this[6]})`
 		return t+r+s
 	}
 	set(n){
@@ -31,4 +31,5 @@ export class Xform extends Array{
 		return this
 	}
 }
+
 

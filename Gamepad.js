@@ -25,7 +25,7 @@ export class InputProvider extends Timer{
 		if(input==null) return []
 		let a = input.buttons.map(v=>v.value>0.5)
 		let events = a.map((pressed,i)=>{
-			if(this.keys[i]==null||pressed==this.buttons[i]) return null
+			if(this.keys[i]===null||pressed===this.buttons[i]) return null
 			return {type:pressed?'pressed':'released',button:this.keys[i]}
 		})
 		this.buttons = a
@@ -47,7 +47,7 @@ export class InputMapper extends InputProvider{
 		return this.getShiftEvents(a).concat(this.getButtonEvents(a))
 	}
 	getButtonEvents(events,type='pressed'){
-		let a = events.filter(e=>e.type==type&&/Trigger$/.test(e.button)==false)
+		let a = events.filter(e=>e.type===type&&/Trigger$/.test(e.button)===false)
 		return a.map(e=>({type:e.button,shift:this.shift}))
 	}
 	getShiftEvents(events){
@@ -61,7 +61,7 @@ export class InputMapper extends InputProvider{
 				case 'RightTrigger_released':state&=2	;break
 			}
 		})
-		if(state != this.shiftState){
+		if(state !== this.shiftState){
 			this.shift = this.shiftKeys[state]||this.bothKeys[this.shiftState]
 			a.push({type:'Shift',shift:this.shift})
 		}
@@ -69,4 +69,5 @@ export class InputMapper extends InputProvider{
 		return a
 	}
 }
+
 

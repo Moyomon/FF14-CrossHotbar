@@ -16,6 +16,7 @@ class TickerClass extends Set{
 	remove(v){this.delete(v);return this}
 }
 
+
 export let Ticker = new TickerClass()
 
 
@@ -47,11 +48,12 @@ export class Timer{
 		return this.dispatch('complete')
 	}
 	dispatch(type,data){
-		this.handlers.filter(a=>a[0]==type).forEach(a=>a[1](data||this))
+		this.handlers.filter(a=>a[0]===type).forEach(a=>a[1](data||this))
 		return this
 	}
 	addFunction(complete){return this.add({complete})}
 	get value(){return Math.min(this.time/this.duration,1)}
 	get remaining(){return Math.max(0,this.duration-this.time)}
 }
+
 

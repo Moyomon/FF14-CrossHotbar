@@ -5,26 +5,27 @@ import {SVG,Rect}	from './js/SVG.js'
 
 export class Logger extends SVG{
 	constructor(){
-		super('g.Logger')
+		super('Logger')
 		this.history = []
 	}
-	addString(s){
+	addString(s){//10
 		//console.log(s)
-		if(this.history.length==12) this.history.length = 0
+
+		if(this.history.length===12) this.history.length = 0
 		let action = new Icon('#'+s).position(45*(this.history.length-11/2),0)
 		this.history.push(action)
-		this.replace(...this.history)
+		this.replace(this.history)//11
 		return this
 	}
 }
 
 class Icon extends SVG{
 	constructor(href){
-		super('g.Icon')
+		super('Icon')
 		let rect = new Rect(-20,-20,40,40)
 		this.add(
 			new SVG('rect',rect,{rx:5,ry:5,stroke:"#000",'stroke-width':2}),
-			new SVG('g',{mask:'url(#CrossHotbar-ButtonMask)'},
+			new SVG({mask:'url(#CrossHotbar-ButtonMask)'},
 				new SVG('use',{href},rect),
 				new SVG('use',{href:'#CrossHotbar-button'},rect),
 			)
@@ -45,6 +46,7 @@ class Layout extends Array{
 		//console.log(width,height)
 		this.forEach((v,i)=>{
 			let {x,y} = locater(i)
+			//console.log(x,y)
 			v.add({transform:`translate(${x*width},${y*height}) scale(${this._scale})`})
 		})
 		return this

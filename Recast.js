@@ -6,11 +6,11 @@ import {Timer}		from './js/Ticker.js'
 
 export class Recast extends SVG{
 	constructor(duration){
-		super('g.Recast').token()
+		super('Recast').token()
 		this.radial = new Radial()
-		this.meter	= new Meter('#'+this.radial.id).visible(false)
-		this.ready	= new Ready().visible(false)
-		this.timer	= new Timer(duration,{
+		this.meter = new Meter('#'+this.radial.id).visible(false)
+		this.ready = new Ready().visible(false)
+		this.timer = new Timer(duration,{
 			update	:timer=>this.value = timer.value,
 			complete:timer=>{
 				this.value = 1
@@ -26,19 +26,19 @@ export class Recast extends SVG{
 		this.radial.value = n
 		this.meter.visible(n<1)
 	}
-	get available(){return this.timer.value==1}
+	get available(){return this.timer.value===1}
 }
 
-Recast.Asset = class extends SVG{
+Recast.Asset = class extends SVG{//10
 	constructor(){
 		super('defs').add(
 			new SVG('filter',{id:'Recast-Blur',filterUnits:'userSpaceOnUse'},
-				'<feGaussianBlur stdDeviation="1"/>'
+				new SVG('feGaussianBlur',{stdDeviation:1}),
 			),
-			new SVG('radialGradient',{id:'Recast-Flash'},`
-				<stop offset="20%" stop-color="white" stop-opacity="0"/>
-				<stop offset="80%" stop-color="white" stop-opacity="1"/>
-			`),
+			new SVG('radialGradient',{id:'Recast-Flash'},
+				new SVG('stop',{offset:'20%',stop_color:'white',stop_opacity:0}),
+				new SVG('stop',{offset:'80%',stop_color:'white',stop_opacity:1}),
+			),
 		)
 	}
 }
@@ -46,7 +46,7 @@ Recast.Asset = class extends SVG{
 
 class Radial extends SVG{
 	constructor(){
-		super('path.Radial').token()
+		super('path Radial').token()
 		this.value = 0
 	}
 	getData(degree,r=20){
@@ -62,7 +62,7 @@ class Radial extends SVG{
 
 class Meter extends SVG{
 	constructor(href){
-		super('g.Meter')
+		super('Meter')
 		let inner	= new Mask(href)
 		let outer	= new Mask(href,true)
 		let timer	= {href,fill:'none',stroke:'white',stroke_width:3,stroke_linejoin:'round'}
@@ -89,7 +89,8 @@ class Mask extends SVG{
 
 class Ready extends SVG{
 	constructor(){
-		super('rect.Ready',{fill:'url(#Recast-Flash)'}).rect(-20,-20,40,40)
+		super('rect Ready',{fill:'url(#Recast-Flash)'}).rect(-20,-20,40,40)
 	}
 }
+
 

@@ -1,19 +1,19 @@
 
 
-import {View}		from './Builder.js'
+import {View}		from './Inference.js'
 import {Xform}		from './Xform.js'
 
 
 export class SVG extends View{
 	createElement(s){
-		return document.createElementNS('http://www.w3.org/2000/svg',s||'svg')
+		return document.createElementNS('http://www.w3.org/2000/svg',s||'g')
 	}
-	addObject(v){
-		if(v instanceof Rect) return this.add(v.toAttribute())
-		return super.addObject(v)
+	varArray(v){
+		if(v instanceof Rect) return this.var(v.toAttribute())
+		return super.varArray(v)
 	}
-	addAttribute(k,v){
-		this.node.setAttribute(k.replaceAll('_','-'),v)
+	varAttribute(k,v){
+		this.node.setAttribute(k.replace(/_/g,'-'),v)
 		return this
 	}
 	token(s){
@@ -41,6 +41,19 @@ export class SVG extends View{
 	}
 }
 
+SVG.Animate = class extends SVG{
+	constructor(attributeName,...a){
+		super('animate',{attributeName,begin:'indefinite',fill:'freeze'},...a)
+	}
+	varNumber(n){return this.add({dur:`${n}s`})}
+	begin(){
+		if(this.node.endElement) this.node.endElement()
+		this.node.beginElement()
+		return this
+	}
+}
+
+
 class Token{
 	constructor(s){
 		let id = this.uuid()
@@ -53,18 +66,6 @@ class Token{
 		a[8] = (a[8] & 0x3f) | 0x80
 		let s = a.map(b =>('0'+b.toString(16)).slice(-2)).join('')
 		return s.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/,'$1-$2-$3-$4-$5')
-	}
-}
-
-SVG.Animate = class extends SVG{
-	constructor(attributeName,...a){
-		super('animate',{attributeName,begin:'indefinite',fill:'freeze'},...a)
-	}
-	addNumber(n){return this.add({dur:`${n}s`})}
-	begin(){
-		if(this.node.endElement) this.node.endElement()
-		this.node.beginElement()
-		return this
 	}
 }
 
@@ -89,4 +90,5 @@ export class Rect extends Array{
 	toAttribute()	{return {x:this[0],y:this[1],width:this[2],height:this[3]}}
 	toSize()		{return {width:this[2],height:this[3]}}
 }
+
 
